@@ -26,6 +26,7 @@ namespace RajaSawit.EditorTools
         public static void SetupProject()
         {
             PlayerSettings.productName = "Raja Sawit";
+            PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, "com.rajasawit.game");
             PlayerSettings.defaultInterfaceOrientation = UIOrientation.Portrait;
             PlayerSettings.allowedAutorotateToPortrait = true;
             PlayerSettings.allowedAutorotateToPortraitUpsideDown = false;
@@ -46,6 +47,12 @@ namespace RajaSawit.EditorTools
         public static void BuildHomeScene()
         {
             if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;
+            CreateHomeScene();
+        }
+
+        /// <summary>Creates Home.unity and puts it in Build Settings. No dialogs, so CI can call it.</summary>
+        public static void CreateHomeScene()
+        {
             BalanceConfigAsset config = EnsureConfig();
             EnsureFolder(SceneFolder);
 

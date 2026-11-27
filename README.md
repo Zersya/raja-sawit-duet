@@ -37,6 +37,15 @@ Cara main di Editor: klik dan seret untuk geser peta, scroll untuk zoom, klik pe
 
 Untuk mempercepat waktu saat mencoba, pilih objek **GameSession** dan ubah **Time Scale** (misalnya 60, berarti satu detik nyata menjalankan satu jam game).
 
+## Build otomatis di cloud (GitHub Actions)
+
+Tiap push ke GitHub, workflow `.github/workflows/unity.yml` menjalankan tes simulasi, tes EditMode di Unity, lalu build APK Android. Tes Unity dan build butuh tiga secret di **Settings > Secrets and variables > Actions**:
+
+- `UNITY_EMAIL` dan `UNITY_PASSWORD`: akun Unity kamu.
+- `UNITY_LICENSE`: isi file lisensi `Unity_lic.ulf`. Cara dapatnya: pasang Unity Hub, login, **Preferences > Licenses > Add > Get a free personal license**. Filenya ada di `C:\ProgramData\Unity\Unity_lic.ulf` (Windows), `/Library/Application Support/Unity/Unity_lic.ulf` (Mac) atau `~/.local/share/unity3d/Unity/Unity_lic.ulf` (Linux).
+
+APK ada di tab **Actions**, buka run terbaru, bagian **Artifacts**, unduh **RajaSawit-APK**.
+
 ## Build ke HP Android
 
 1. **File > Build Profiles**, pilih **Android**, lalu **Switch Platform**.

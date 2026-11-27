@@ -1,0 +1,107 @@
+name: Unity
+
+# Tes dan build APK Android di cloud tiap push.
+# Butuh 3 secret di Settings > Secrets and variables > Actions: UNITY_LICENSE, UNITY_EMAIL, UNITY_PASSWORD.
+
+on:
+  push:
+  workflow_dispatch:
+
+concurrency:
+  group: unity-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  checks: write
+
+jobs:
+  sim:
+    name: Tes simulasi (dotnet)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - run: dotnet test tools/sim-check
+
+  lisensi:
+    name: Cek secret lisensi Unity
+    runs-on: ubuntu-latest
+    outputs:
+      ada: ${{ steps.cek.outputs.ada }}
+    steps:
+      - id: cek
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        run: |
+          if [ -n "$UNITY_LICENSE" ] && [ -n "$UNITY_EMAIL" ] && [ -n "$UNITY_PASSWORD" ]; then
+            echo "ada=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ada=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::Secret UNITY_LICENSE, UNITY_EMAIL atau UNITY_PASSWORD belum dipasang, jadi tes Unity dan build APK dilewati."
+          fi
+
+  unity-test:
+    name: Tes EditMode di Unity
+    needs: lisensi
+    if: needs.lisensi.outputs.ada == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+      - uses: actions/cache@v4
+        with:
+          path: Library
+          key: Library-test-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
+          restore-keys: Library-test-
+      - id: tests
+        uses: game-ci/unity-test-runner@v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          testMode: EditMode
+          githubToken: ${{ secrets.GITHUB_TOKEN }}
+          checkName: Hasil tes EditMode
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hasil-tes
+          path: ${{ steps.tests.outputs.artifactsPath }}
+
+  android:
+    name: Build APK Android
+    needs: lisensi
+    if: needs.lisensi.outputs.ada == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: jlumbroso/free-disk-space@v1.3.1
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+      - uses: actions/cache@v4
+        with:
+          path: Library
+          key: Library-Android-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
+          restore-keys: Library-Android-
+      - uses: game-ci/unity-builder@v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          targetPlatform: Android
+          buildName: RajaSawit
+          buildMethod: RajaSawit.EditorTools.CiBuild.BuildAndroid
+          androidExportType: androidPackage
+      - uses: actions/upload-artifact@v4
+        with:
+          name: RajaSawit-APK
+          path: build/Android
+          retention-days: 14
