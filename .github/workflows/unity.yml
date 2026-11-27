@@ -1,7 +1,8 @@
 name: Unity
 
 # Tes dan build APK Android di cloud tiap push.
-# Butuh 3 secret di Settings > Secrets and variables > Actions: UNITY_LICENSE, UNITY_EMAIL, UNITY_PASSWORD.
+# Butuh 2 secret di Settings > Secrets and variables > Actions: UNITY_EMAIL dan UNITY_PASSWORD.
+# GameCI v6 / test-runner v5 mengaktifkan lisensi Personal lewat akun Unity, tanpa file .ulf.
 
 on:
   push:
@@ -34,15 +35,14 @@ jobs:
     steps:
       - id: cek
         env:
-          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
         run: |
-          if [ -n "$UNITY_LICENSE" ] && [ -n "$UNITY_EMAIL" ] && [ -n "$UNITY_PASSWORD" ]; then
+          if [ -n "$UNITY_EMAIL" ] && [ -n "$UNITY_PASSWORD" ]; then
             echo "ada=true" >> "$GITHUB_OUTPUT"
           else
             echo "ada=false" >> "$GITHUB_OUTPUT"
-            echo "::warning::Secret UNITY_LICENSE, UNITY_EMAIL atau UNITY_PASSWORD belum dipasang, jadi tes Unity dan build APK dilewati."
+            echo "::warning::Secret UNITY_EMAIL atau UNITY_PASSWORD belum dipasang, jadi tes Unity dan build APK dilewati."
           fi
 
   unity-test:
@@ -60,9 +60,8 @@ jobs:
           key: Library-test-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
           restore-keys: Library-test-
       - id: tests
-        uses: game-ci/unity-test-runner@v4
+        uses: game-ci/unity-test-runner@v5.0.0-beta.1
         env:
-          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
         with:
@@ -90,9 +89,8 @@ jobs:
           path: Library
           key: Library-Android-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
           restore-keys: Library-Android-
-      - uses: game-ci/unity-builder@v4
+      - uses: game-ci/unity-builder@v6
         env:
-          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
         with:
