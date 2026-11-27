@@ -1,0 +1,30 @@
+{
+    "name": "RajaSawit.Editor",
+    "rootNamespace": "RajaSawit.EditorTools",
+    "references": [
+        "RajaSawit.Sim",
+        "RajaSawit.Data",
+        "RajaSawit.Core",
+        "RajaSawit.View",
+        "RajaSawit.UI",
+        "UnityEngine.UI",
+        "Unity.InputSystem"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [
+        {
+            "name": "com.unity.inputsystem",
+            "expression": "1.0.0",
+            "define": "RS_INPUT_SYSTEM"
+        }
+    ],
+    "noEngineReferences": false
+}

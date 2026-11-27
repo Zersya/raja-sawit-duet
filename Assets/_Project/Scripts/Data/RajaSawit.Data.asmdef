@@ -1,0 +1,16 @@
+{
+    "name": "RajaSawit.Data",
+    "rootNamespace": "RajaSawit.Data",
+    "references": [
+        "RajaSawit.Sim"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
