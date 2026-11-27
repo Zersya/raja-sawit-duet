@@ -39,7 +39,7 @@ Untuk mempercepat waktu saat mencoba, pilih objek **GameSession** dan ubah **Tim
 
 ## Build otomatis di cloud (GitHub Actions)
 
-Tiap push ke GitHub, workflow `.github/workflows/unity.yml` menjalankan tes simulasi, tes EditMode di Unity, lalu build APK Android. Tes Unity dan build butuh dua secret di **Settings > Secrets and variables > Actions**: `UNITY_EMAIL` dan `UNITY_PASSWORD` dari akun Unity kamu. Lisensi Personal diaktifkan otomatis lewat akun itu, jadi tidak perlu file `.ulf`.
+Tiap push ke GitHub, workflow `.github/workflows/unity.yml` menjalankan tes simulasi, tes EditMode di Unity lalu build APK Android (keduanya dalam satu job). Tes Unity dan build butuh dua secret di **Settings > Secrets and variables > Actions**: `UNITY_EMAIL` dan `UNITY_PASSWORD` dari akun Unity kamu. Lisensi Personal diaktifkan otomatis lewat akun itu, jadi tidak perlu file `.ulf`.
 
 APK ada di tab **Actions**, buka run terbaru, bagian **Artifacts**, unduh **RajaSawit-APK**.
 

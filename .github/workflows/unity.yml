@@ -1,8 +1,9 @@
 name: Unity
 
 # Tes dan build APK Android di cloud tiap push.
+# Tes EditMode jalan di dalam job build (CiBuild.BuildAndroid), karena unity-test-runner belum mendukung aktivasi lewat akun.
 # Butuh 2 secret di Settings > Secrets and variables > Actions: UNITY_EMAIL dan UNITY_PASSWORD.
-# GameCI v6 / test-runner v5 mengaktifkan lisensi Personal lewat akun Unity, tanpa file .ulf.
+# game-ci/unity-builder@v6 mengaktifkan lisensi Personal lewat akun Unity, tanpa file .ulf.
 
 on:
   push:
@@ -14,7 +15,6 @@ concurrency:
 
 permissions:
   contents: read
-  checks: write
 
 jobs:
   sim:
@@ -45,37 +45,8 @@ jobs:
             echo "::warning::Secret UNITY_EMAIL atau UNITY_PASSWORD belum dipasang, jadi tes Unity dan build APK dilewati."
           fi
 
-  unity-test:
-    name: Tes EditMode di Unity
-    needs: lisensi
-    if: needs.lisensi.outputs.ada == 'true'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          lfs: true
-      - uses: actions/cache@v4
-        with:
-          path: Library
-          key: Library-test-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
-          restore-keys: Library-test-
-      - id: tests
-        uses: game-ci/unity-test-runner@v5.0.0-beta.1
-        env:
-          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
-          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
-        with:
-          testMode: EditMode
-          githubToken: ${{ secrets.GITHUB_TOKEN }}
-          checkName: Hasil tes EditMode
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: hasil-tes
-          path: ${{ steps.tests.outputs.artifactsPath }}
-
   android:
-    name: Build APK Android
+    name: Tes EditMode dan build APK Android
     needs: lisensi
     if: needs.lisensi.outputs.ada == 'true'
     runs-on: ubuntu-latest

@@ -1,13 +1,15 @@
 using System;
 using UnityEditor;
 using UnityEditor.Build.Reporting;
+using UnityEditor.TestTools.TestRunner.Api;
 using UnityEngine;
 
 namespace RajaSawit.EditorTools
 {
     /// <summary>
     /// Entry point for the GitHub Actions build (game-ci/unity-builder, buildMethod).
-    /// Runs the same steps as the "Raja Sawit" menu, then builds an Android APK.
+    /// Runs the EditMode tests, then the same steps as the "Raja Sawit" menu, then builds an Android APK.
+    /// GameCI only counts a build as passed when the log contains "Build succeeded!".
     /// </summary>
     public static class CiBuild
     {
@@ -16,6 +18,12 @@ namespace RajaSawit.EditorTools
             int exitCode = 1;
             try
             {
+                if (!RunEditModeTests())
+                {
+                    EditorApplication.Exit(2);
+                    return;
+                }
+
                 RajaSawitSetup.SetupProject();
                 RajaSawitSetup.CreateHomeScene();
                 AssetDatabase.SaveAssets();
@@ -41,13 +49,64 @@ namespace RajaSawit.EditorTools
                 BuildReport report = BuildPipeline.BuildPlayer(options);
                 BuildSummary summary = report.summary;
                 Debug.Log($"[RajaSawit] Build {summary.result}: {summary.outputPath}, {summary.totalSize / (1024 * 1024)} MB, {summary.totalErrors} error, {summary.totalTime}");
-                if (summary.result == BuildResult.Succeeded) exitCode = 0;
+                if (summary.result == BuildResult.Succeeded)
+                {
+                    exitCode = 0;
+                    Debug.Log("Build succeeded!");
+                }
             }
             catch (Exception e)
             {
                 Debug.LogException(e);
             }
             EditorApplication.Exit(exitCode);
+        }
+
+        /// <summary>Runs every EditMode test synchronously and logs each failure.</summary>
+        public static bool RunEditModeTests()
+        {
+            var api = ScriptableObject.CreateInstance<TestRunnerApi>();
+            var callbacks = new TestCallbacks();
+            api.RegisterCallbacks(callbacks);
+            api.Execute(new ExecutionSettings(new Filter { testMode = TestMode.EditMode }) { runSynchronously = true });
+            api.UnregisterCallbacks(callbacks);
+
+            Debug.Log($"[RajaSawit] Tes EditMode: {callbacks.Passed} lulus, {callbacks.Failed} gagal, {callbacks.Skipped} dilewati.");
+            if (!callbacks.Finished) Debug.LogError("[RajaSawit] Tes EditMode tidak selesai.");
+            if (callbacks.Passed == 0) Debug.LogError("[RajaSawit] Tidak ada tes EditMode yang jalan.");
+            return callbacks.Finished && callbacks.Failed == 0 && callbacks.Passed > 0;
+        }
+
+        private class TestCallbacks : ICallbacks
+        {
+            public int Passed, Failed, Skipped;
+            public bool Finished;
+
+            public void RunStarted(ITestAdaptor testsToRun) { }
+
+            public void RunFinished(ITestResultAdaptor result) => Finished = true;
+
+            public void TestStarted(ITestAdaptor test) { }
+
+            public void TestFinished(ITestResultAdaptor result)
+            {
+                if (result.HasChildren) return;
+                switch (result.TestStatus)
+                {
+                    case TestStatus.Passed:
+                        Passed++;
+                        Debug.Log($"[RajaSawit] LULUS {result.FullName}");
+                        break;
+                    case TestStatus.Failed:
+                        Failed++;
+                        Debug.LogError($"[RajaSawit] GAGAL {result.FullName}: {result.Message}\n{result.StackTrace}");
+                        break;
+                    default:
+                        Skipped++;
+                        break;
+                }
+                if (!string.IsNullOrEmpty(result.Output)) Debug.Log(result.Output);
+            }
         }
 
         private static string Arg(string name)
